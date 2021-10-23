@@ -1,0 +1,49 @@
+use id::FrameId;
+
+/// Represents a frame on the CAN Bus network. Each frame has an id, that can be either:
+/// Standard as defined in CAN2.0A - 11 bits long or Extended as defined in CAN2.0B - 29 bits long.
+/// Frame can be one of three currently used kinds.
+struct Frame {
+	id: FrameId,
+	kind: FrameKind,
+}
+
+/// Represents the kind of a message.
+enum FrameKind {
+	/// CAN2.0A or CAN2.0B remote transmission request frame, RTR bit recessive.
+	/// Carries no data, but do carry requested length.
+	ClassicalRtr {
+		requested_length: 0..=8
+	},
+	/// CAN2.0A or CAN2.0B data frame, RTR bit dominant, can carry up to 8 bytes of payload.
+	ClassicalData {
+		payload: [u8; 0..=8]
+	},
+	/// CAN FD 1.0 frame, carries up to 64 bytes of payload.
+	/// FD frames carry an additional error state indicator.
+	FD {
+		payload: [u8; {0..=8, 12, 16, 20, 24, 32, 48, 64}],
+		bitrate_switch: bool {
+			values: [
+				false => "Payload will be transmitted or was received with a nominal bitrate, used in arbitration phase.",
+				true => "Payload will be transmitted or was received with a different bitrate."
+			]
+		},
+		esi: ErrorStateIndicator,
+	}
+}
+
+enum ErrorStateIndicator {
+	/// ESI bit dominant.
+	/// When receiving: transmitting node is error active.
+	///
+	/// When transmitting: ESI bit will depend on actual node state.
+	/// Indicates that node can transmit Error frames.
+	ErrorActive,
+	/// ESI bit recessive.
+	/// When receiving: transmitting node is error passive.
+	///
+	/// When transmitting: optionally indicate error passive state even if error active.
+	/// Indicates that node cannot transmit Error frames.
+	ErrorPassive
+}

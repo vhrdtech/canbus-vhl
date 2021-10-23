@@ -1,0 +1,11 @@
+/// CAN Bus Frame ID
+pub enum FrameId {
+	Standard(StandardId),
+	Extended(ExtendedId)
+}
+
+/// Standard frame ID (IDE bit dominant)
+pub struct StandardId(u11);
+
+/// Extended frame ID (IDE bit recessive)
+pub struct ExtendedId(u29);
